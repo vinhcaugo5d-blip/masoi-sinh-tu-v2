@@ -1,7 +1,7 @@
 {
-  "name": "masoi-12-ultimate",
+  "name": "ma-soi-sinh-tu-12-nguoi",
   "version": "1.0.0",
-  "description": "Game Ma Soi Sinh Tu 12 Nguoi Full Feature",
+  "description": "Đấu trường Ma Sói Sinh Tử 12 người với hệ thống định danh bảo mật và 1000 nhóm nhân cách",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -9,5 +9,13 @@
   "dependencies": {
     "express": "^4.19.2",
     "socket.io": "^4.7.5"
-  }
+  },
+  "keywords": [
+    "werewolf",
+    "ma-soi",
+    "socket.io",
+    "game"
+  ],
+  "author": "",
+  "license": "MIT"
 }
