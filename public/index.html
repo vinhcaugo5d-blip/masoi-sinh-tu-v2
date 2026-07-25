@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma Sói Sinh Tử - 12 Người (Chiến Thần AI)</title>
+    <title>Ma Sói Sinh Tử - 12 Người (Đêm & Ngày)</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
         * {
@@ -258,7 +258,7 @@
 <body>
 
     <header>
-        <h1>🐺 Ma Sói Sinh Tử - 12 Người (Chiến Thần AI)</h1>
+        <h1>🐺 Ma Sói Sinh Tử - 12 Người (Đêm & Ngày)</h1>
         <div class="room-info" id="roomInfo">Trạng thái: Chưa vào phòng</div>
     </header>
 
@@ -279,10 +279,10 @@
 
             <div class="chat-box">
                 <div class="chat-messages" id="chatMessages">
-                    <div class="message-item"><span>[Hệ thống]:</span> Chào mừng bạn đến với Ma Sói Sinh Tử! Nhấn tìm trận để ghép phòng với 11 Bot Qwen-72B.</div>
+                    <div class="message-item"><span>[Hệ thống]:</span> Chào mừng bạn đến với Ma Sói Sinh Tử! Nhấn tìm trận để bắt đầu vòng chu kỳ Đêm và Ngày.</div>
                 </div>
                 <div class="chat-input-area">
-                    <input type="text" id="chatInput" placeholder="Chờ đến lượt biện luận..." disabled>
+                    <input type="text" id="chatInput" placeholder="Chờ đến lượt biện luận ban ngày..." disabled>
                     <button id="btnSend" disabled>Gửi</button>
                 </div>
             </div>
@@ -301,7 +301,7 @@
                 <div class="wolf-messages" id="wolfMessages"></div>
                 <div class="chat-input-area">
                     <input type="text" id="wolfInput" placeholder="Bàn bạc cắn người...">
-                    <button id="btnSendWolf" onclick="sendWolfMessage()">Cắn</button>
+                    <button id="btnSendWolf" onclick="sendWolfMessage()">Gửi</button>
                 </div>
             </div>
         </div>
@@ -369,15 +369,15 @@
 
             const chatInput = document.getElementById('chatInput');
             const btnSend = document.getElementById('btnSend');
-            if (data.phase.includes("Phát biểu 15s: [01]")) {
+            if (data.phase.includes("Phát biểu ban ngày: [01]")) {
                 chatInput.disabled = false;
                 btnSend.disabled = false;
-                chatInput.placeholder = "Nhập nội dung biện luận lập luận ngay...";
+                chatInput.placeholder = "Nhập nội dung biện luận ban ngày...";
                 chatInput.focus();
             } else {
                 chatInput.disabled = true;
                 btnSend.disabled = true;
-                chatInput.placeholder = "Chờ đến lượt biện luận...";
+                chatInput.placeholder = "Chờ đến lượt biện luận ban ngày...";
             }
         });
 
@@ -387,7 +387,7 @@
 
         socket.on('enable_voting', (data) => {
             canVoteNow = true;
-            appendSystemMessage("HỆ THỐNG", "Vòng bỏ phiếu đã mở! Hãy click chọn một ô người chơi ở cột trái để dồn phiếu treo cổ.");
+            appendSystemMessage("HỆ THỐNG", "Vòng biểu quyết treo cổ ban ngày đã mở! Hãy click chọn một ô người chơi ở cột trái.");
             renderPlayers(data.players);
         });
 
@@ -412,7 +412,7 @@
         });
 
         socket.on('vote_recorded', (data) => {
-            appendSystemMessage("BỎ PHIẾU", `Người chơi ${data.voter} đã bỏ phiếu phạt nhắm vào ô ${data.target}`);
+            appendSystemMessage("BỎ PHIẾU", `Người chơi ${data.voter} đã bỏ phiếu treo cổ nhắm vào ô ${data.target}`);
         });
 
         socket.on('player_died', (data) => {
