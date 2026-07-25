@@ -1,21 +1,26 @@
 {
-  "name": "ma-soi-sinh-tu-12-nguoi",
+  "name": "ma-soi-sinh-tu",
   "version": "1.0.0",
-  "description": "Đấu trường Ma Sói Sinh Tử 12 người với hệ thống định danh ẩn danh và lõi AI Qwen-72B",
+  "description": "Trò chơi Ma Sói Sinh Tử 12 người tích hợp AI Qwen-72B chạy trên Node.js và Socket.IO",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
     "socket.io": "^4.7.5"
   },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "keywords": [
-    "werewolf",
     "ma-soi",
+    "werewolf",
     "socket.io",
-    "game"
+    "express",
+    "qwen"
   ],
-  "author": "",
+  "author": "Chiến Thần",
   "license": "MIT"
 }
