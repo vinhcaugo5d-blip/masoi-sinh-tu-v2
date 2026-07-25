@@ -1,17 +1,13 @@
 {
-  "name": "ma-soi-sinh-tu",
+  "name": "ma-soi-12-nguoi",
   "version": "1.0.0",
-  "description": "Trò chơi Ma Sói Sinh Tử 12 người tích hợp AI ChatGPT chạy trên Node.js và Socket.IO",
+  "description": "Game Ma Sói 12 người tích hợp AI Qwen 2.5 72B",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.19.2",
     "socket.io": "^4.7.5"
-  },
-  "engines": {
-    "node": ">=18.0.0"
   }
 }
