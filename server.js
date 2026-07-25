@@ -28,7 +28,7 @@ Hãy viết một câu phát biểu ngắn gọn (dưới 30 từ) bằng tiến
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer ĐIỀN_API_KEY_CỦA_BẠN_VÀO_ĐÂY', // Thay API key thực tế vào đây
+                'Authorization': 'Bearer ĐIỀN_API_KEY_CỦA_BẠN_VÀO_ĐÂY', // Thay API key thực tế vào đây nếu dùng
             },
             body: JSON.stringify({
                 model: 'qwen/qwen-72b-instruct',
@@ -63,7 +63,7 @@ Hãy viết một câu phát biểu ngắn gọn (dưới 30 từ) bằng tiến
 
 // Khởi tạo phòng 12 người (1 người chơi thực + 11 bot)
 function createNewRoom(roomID, hostSocketID) {
-    const genders = ['Nam', Nữ];
+    const genders = ['Nam', 'Nữ'];
     const ranks = ['Đồng', 'Bạc', 'Vàng', 'Bạch Kim', 'Kim Cương', 'Cao Thủ', 'Đại Cao Thủ', 'Chiến Thần'];
     const rolesPool = ['Sói', 'Sói', 'Sói', 'Phù Thủy', 'Bảo Vệ', 'Tiên Tri', 'Dân', 'Dân', 'Dân', 'Dân', 'Dân', 'Dân'];
     
@@ -182,7 +182,6 @@ function resolveVotes(roomID) {
     let room = activeRooms[roomID];
     if (!room) return;
 
-    // Bot tự động bỏ phiếu ngẫu nhiên nếu người chơi chưa vote kịp
     room.players.filter(p => p.isAlive && !p.isYou && !room.votes[p.slotID]).forEach(bot => {
         let targets = room.players.filter(p => p.isAlive && p.slotID !== bot.slotID);
         if (targets.length > 0) {
@@ -191,7 +190,6 @@ function resolveVotes(roomID) {
         }
     });
 
-    // Đếm phiếu
     let voteCounts = {};
     Object.values(room.votes).forEach(target => {
         voteCounts[target] = (voteCounts[target] || 0) + 1;
@@ -216,7 +214,6 @@ function resolveVotes(roomID) {
         io.to(roomID).emit('bot_chat', { slot: '', message: "Kết quả hòa phiếu, không có ai bị treo cổ vòng này." });
     }
 
-    // Kiểm tra điều kiện thắng thua
     setTimeout(() => checkGameEnd(roomID), 2000);
 }
 
@@ -238,11 +235,9 @@ function checkGameEnd(roomID) {
         return;
     }
 
-    // Tiếp tục vòng mới (quay lại phát biểu)
     runSpeechPhase(roomID);
 }
 
-// Xử lý kết nối Socket.IO
 io.on('connection', (socket) => {
     console.log(`Client kết nối thành công: ${socket.id}`);
 
@@ -261,7 +256,6 @@ io.on('connection', (socket) => {
             players: room.players
         });
 
-        // Bắt đầu chu kỳ game sau 2 giây
         setTimeout(() => {
             runSpeechPhase(roomID);
         }, 2000);
@@ -298,7 +292,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Lắng nghe cổng động của Render hoặc cổng 3000 mặc định
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server Ma Sói Sinh Tử đang chạy thành công tại cổng ${PORT}`);
