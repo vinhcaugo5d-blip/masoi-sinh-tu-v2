@@ -5,8 +5,13 @@
     <title>Đấu Trường Ma Sói Sinh Tử 12 Người</title>
     <style>
         * { box-sizing: border-box; }
-        body { background-color: #0b0f19; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-        .main-container { width: 1200px; height: 720px; background: #172033; border-radius: 10px; box-shadow: 0 0 50px rgba(0,0,0,0.9); border: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; }
+        body { background-color: #0b0f19; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; transition: background 0.5s; }
+        
+        /* HIỆU ỨNG BAN ĐÊM (MÀN HÌNH TỐI, XANH ĐEN LẠNH) */
+        body.night-mode { background-color: #030712; filter: brightness(0.85); }
+        body.night-mode .main-container { border-color: #1e3a8a; box-shadow: 0 0 50px rgba(30, 58, 138, 0.4); }
+
+        .main-container { width: 1200px; height: 720px; background: #172033; border-radius: 10px; box-shadow: 0 0 50px rgba(0,0,0,0.9); border: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; transition: all 0.5s; }
         
         /* TOP BAR */
         .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #0f172a; border-bottom: 1px solid #334155; }
@@ -28,12 +33,11 @@
         
         /* RIGHT PANEL: 12 SLOT GRID */
         .right-panel { flex: 1; padding: 15px; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px; background: #111827; overflow-y: auto; }
-        .slot-card { background: rgba(30, 41, 59, 0.85); border: 2px solid #334155; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 6px; transition: all 0.2s; }
+        .slot-card { background: rgba(30, 41, 59, 0.85); border: 2px solid #334155; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; padding: 6px; transition: all 0.2s; cursor: pointer; }
         .slot-card:hover { border-color: #38bdf8; transform: translateY(-2px); }
         
         .slot-tag { position: absolute; top: 6px; left: 8px; background: rgba(15, 23, 42, 0.8); padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; color: #38bdf8; border: 1px solid #334155; }
         .slot-avatar { width: 55px; height: 55px; background: #334155; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; margin: 4px 0; border: 2px solid #475569; }
-        .slot-personality { font-size: 9px; color: #94a3b8; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 90%; margin-top: 2px; }
 
         /* MÀN HÌNH SẢNH CHỜ */
         .overlay-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(11, 15, 25, 0.95); display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 10; }
@@ -48,16 +52,16 @@
         <!-- MÀN HÌNH SẢNH CHỜ -->
         <div id="lobby-screen" class="overlay-screen">
             <h1 style="color: #f8fafc; margin-bottom: 10px; font-size: 26px;">ĐẤU TRƯỜNG MA SÓI SINH TỬ 12 NGƯỜI</h1>
-            <p style="color: #94a3b8; margin-bottom: 30px; font-size: 13px;">Hệ thống định danh ẩn danh tuyệt đối từ [01] đến [12] | Lõi Qwen-72B</p>
+            <p style="color: #94a3b8; margin-bottom: 30px; font-size: 13px;">Hệ thống định danh ẩn danh tuyệt đối | Tự động chuyển ngày/đêm & Bỏ phiếu</p>
             <button class="btn-play" onclick="joinMatch()">VÀO TRẬN ĐẤU</button>
         </div>
 
         <!-- TOP BAR -->
         <div class="top-bar">
             <div class="phase-title">
-                <span>⏳ Thảo luận: <span id="timer-display">45s</span></span>
+                <span>⏳ <span id="phase-name">Thảo luận ngày</span>: <span id="timer-display">30s</span></span>
             </div>
-            <div style="font-size: 12px; color: #38bdf8;">Phòng: <span id="room-code-tag">#MS8821</span> | Bảo Mật IP: <span style="color: #22c55e;">Đã kích hoạt</span></div>
+            <div style="font-size: 12px; color: #38bdf8;">Phòng: <span id="room-code-tag">#MS8821</span> | Vai trò của bạn: <span id="my-role-tag" style="color: #22c55e; font-weight: bold;">Đang tải...</span></div>
         </div>
 
         <!-- GAME LAYOUT -->
@@ -66,22 +70,20 @@
             <!-- LEFT PANEL (CHAT & LOGS) -->
             <div class="left-panel">
                 <div class="tabs">
-                    <div class="tab-btn active">Trò chuyện ngày</div>
-                    <div class="tab-btn" style="color: #f43f5e;">Chat Sói Ẩn</div>
+                    <div id="tab-day" class="tab-btn active" onclick="switchTab('day')">Trò chuyện ngày</div>
+                    <div id="tab-wolf" class="tab-btn" style="color: #f43f5e; opacity: 0.5;" onclick="switchTab('wolf')">Chat Sói Ẩn</div>
                 </div>
                 <div id="chat-box" class="chat-display">
-                    <div><span style="color: #facc15;">[Hệ thống]:</span> Ngày 1 đã bắt đầu. Hãy quan sát các định danh!</div>
+                    <div><span style="color: #facc15;">[Hệ thống]:</span> Trận đấu bắt đầu. Chúc bạn chơi vui vẻ!</div>
                 </div>
                 <div class="chat-input-row">
-                    <input type="text" id="chat-input" class="chat-input" placeholder="Nhập thông điệp ẩn danh...">
-                    <button class="btn-send" onclick="sendPlayerMessage()">Gửi</button>
+                    <input type="text" id="chat-input" class="chat-input" placeholder="Nhập tin nhắn..." onkeypress="handleKeyPress(event)">
+                    <button class="btn-send" onclick="sendMessage()">Gửi</button>
                 </div>
             </div>
 
-            <!-- RIGHT PANEL (12 Ô ĐỊNH DANH) -->
-            <div id="grid-container" class="right-panel">
-                <!-- Được lấp đầy tự động từ server -->
-            </div>
+            <!-- RIGHT PANEL (12 Ô ĐỊNH DANH - DÙNG ĐỂ VOTE HOẶC CHỌN MỤC TIÊU) -->
+            <div id="grid-container" class="right-panel"></div>
 
         </div>
     </div>
@@ -89,42 +91,136 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+        let currentRoom = '';
+        let isMyWolf = false;
+        let activeTab = 'day'; // 'day' hoặc 'wolf'
+        let currentPhase = 'Thảo luận ngày';
 
         function joinMatch() {
             document.getElementById('lobby-screen').classList.add('hidden');
-            socket.emit('find_match', { rank: 'Kim Cương', isMVP: true });
+            socket.emit('find_match', {});
         }
 
         socket.on('match_started', (data) => {
+            currentRoom = data.roomID;
+            isMyWolf = data.isWolf;
             document.getElementById('room-code-tag').innerText = `#${data.roomID}`;
+            document.getElementById('my-role-tag</u>').innerText = data.players.find(p => p.slotID === data.mySlot).role;
+
+            if (isMyWolf) {
+                document.getElementById('tab-wolf').style.opacity = '1';
+            }
+            renderGrid(data.players);
+        });
+
+        socket.on('update_timer', (data) => {
+            document.getElementById('timer-display').innerText = data.time + 's';
+        });
+
+        socket.on('phase_change', (data) => {
+            currentPhase = data.phase;
+            document.getElementById('phase-name').innerText = data.phase;
+            document.getElementById('timer-display').innerText = data.time + 's';
+            appendSystemMessage(`Chuyển pha: ${data.phase}`);
+
+            if (data.isNight) {
+                document.body.classList.add('night-mode');
+                if (isMyWolf) {
+                    switchTab('wolf'); // Tự động bật tab sói ban đêm cho phe sói
+                }
+            } else {
+                document.body.classList.remove('night-mode');
+                switchTab('day');
+            }
+        });
+
+        socket.on('enable_voting', (data) => {
+            appendSystemMessage('Đã đến thời gian BỎ PHẾU! Hãy click vào ô định danh của người bạn muốn treo cổ.');
+        });
+
+        socket.on('receive_message', (data) => {
+            if(activeTab === 'day') appendChat(data.sender, data.message, '#cbd5e1');
+        });
+
+        socket.on('receive_wolf_message', (data) => {
+            if(activeTab === 'wolf' && isMyWolf) appendChat(data.sender, data.message, '#f43f5e');
+        });
+
+        socket.on('vote_recorded', (data) => {
+            appendSystemMessage(`[Bỏ phiếu]: ${data.voter} đã vote chọn ${data.target}`);
+        });
+
+        function switchTab(tab) {
+            if (tab === 'wolf' && !isMyWolf) {
+                alert('Bạn không phải phe Sói nên không thể dùng kênh này!');
+                return;
+            }
+            activeTab = tab;
+            document.getElementById('tab-day').classList.toggle('active', tab === 'day');
+            document.getElementById('tab-wolf').classList.toggle('active', tab === 'wolf');
+        }
+
+        function sendMessage() {
+            let input = document.getElementById('chat-input');
+            let text = input.value.trim();
+            if (text === "") return;
+
+            if (activeTab === 'day') {
+                appendChat('[Bạn]', text, '#38bdf8');
+                socket.emit('player_chat', { roomID: currentRoom, message: text });
+            } else if (activeTab === 'wolf' && isMyWolf) {
+                appendChat('[Sói (Bạn)]', text, '#f43f5e');
+                socket.emit('wolf_chat', { roomID: currentRoom, message: text });
+            }
+            input.value = "";
+        }
+
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') sendMessage();
+        }
+
+        function selectSlot(slotID) {
+            if (currentPhase === 'Bỏ phiếu treo cổ') {
+                if (confirm(`Bạn có chắc chắn muốn bỏ phiếu treo cổ ô ${slotID} không?`)) {
+                    socket.emit('submit_vote', { roomID: currentRoom, voter: '[Bạn]', target: slotID });
+                    appendSystemMessage(`Bạn đã bỏ phiếu chọn ${slotID}`);
+                }
+            } else if (currentPhase.includes('Đêm tối') && isMyWolf) {
+                if (confirm(`Sói chọn cắn tiêu diệt ô ${slotID} đêm nay?`)) {
+                    appendSystemMessage(`[Sói]: Đã chọn mục tiêu cắn ${slotID}`);
+                }
+            } else {
+                alert(`Đang trong pha ${currentPhase}, chưa thể thực hiện hành động này.`);
+            }
+        }
+
+        function appendChat(sender, message, color) {
+            let chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<div><span style="color: ${color}; font-weight: bold;">${sender}:</span> ${message}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function appendSystemMessage(message) {
+            let chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<div><span style="color: #facc15; font-weight: bold;">[Hệ thống]:</span> ${message}</div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function renderGrid(players) {
             let gridHTML = '';
-            
-            data.players.forEach((p, index) => {
-                let slotCode = `[${(index + 1).toString().padStart(2, '0')}]`;
+            players.forEach((p) => {
                 let genderIcon = p.gender === 'Nam' ? '👦' : '👧';
                 let borderColor = p.isAlive ? '#334155' : '#ef4444';
 
                 gridHTML += `
-                    <div class="slot-card" style="border-color: ${borderColor};">
-                        <div class="slot-tag">${slotCode}</div>
+                    <div class="slot-card" style="border-color: ${borderColor};" onclick="selectSlot('${p.slotID}')">
+                        <div class="slot-tag">${p.slotID}</div>
                         <div class="slot-avatar">${genderIcon}</div>
-                        <div style="font-size: 11px; font-weight: bold; color: ${p.gender === 'Nam' ? '#60a5fa' : '#f472b6'};">${p.gender}</div>
-                        <div class="slot-personality">${p.personality}</div>
+                        <div style="font-size: 11px; font-weight: bold; color: ${p.gender === 'Nam' ? '#60a5fa' : '#f472b6'}; margin-top: 4px;">${p.gender}</div>
                     </div>
                 `;
             });
-
             document.getElementById('grid-container').innerHTML = gridHTML;
-        });
-
-        function sendPlayerMessage() {
-            let input = document.getElementById('chat-input');
-            if (input.value.trim() !== "") {
-                let chatBox = document.getElementById('chat-box');
-                chatBox.innerHTML += `<div><span style="color: #38bdf8;">[Bạn]:</span> ${input.value}</div>`;
-                input.value = "";
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
         }
     </script>
 </body>
