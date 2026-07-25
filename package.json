@@ -1,7 +1,7 @@
 {
   "name": "ma-soi-sinh-tu-12-nguoi",
   "version": "1.0.0",
-  "description": "Đấu trường Ma Sói Sinh Tử 12 người với hệ thống định danh bảo mật và 1000 nhóm nhân cách",
+  "description": "Đấu trường Ma Sói Sinh Tử 12 người với hệ thống định danh ẩn danh và lõi AI Qwen-72B",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
