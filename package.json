@@ -13,14 +13,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "keywords": [
-    "ma-soi",
-    "werewolf",
-    "socket.io",
-    "express",
-    "qwen"
-  ],
-  "author": "Chiến Thần",
-  "license": "MIT"
+  }
 }
