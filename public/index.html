@@ -3,262 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma Sói Sinh Tử - 12 Người (Đêm & Ngày)</title>
+    <title>Ma Sói Sinh Tử - 12 Người (Đêm & Ngày Chuẩn Chỉnh)</title>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
-        header {
-            background-color: #1e293b;
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #334155;
-        }
-        h1 {
-            font-size: 1.5rem;
-            color: #38bdf8;
-        }
-        .room-info {
-            font-size: 1rem;
-            color: #cbd5e1;
-        }
-        .main-container {
-            display: grid;
-            grid-template-columns: 320px 1fr 350px;
-            flex: 1;
-            overflow: hidden;
-        }
-        .sidebar-left {
-            background-color: #1e293b;
-            border-right: 2px solid #334155;
-            padding: 15px;
-            overflow-y: auto;
-        }
-        .sidebar-left h3 {
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-            color: #f43f5e;
-        }
-        .player-card {
-            background-color: #334155;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            transition: all 0.3s;
-            border-left: 4px solid #64748b;
-            cursor: pointer;
-        }
-        .player-card.alive {
-            border-left-color: #22c55e;
-        }
-        .player-card.dead {
-            border-left-color: #ef4444;
-            opacity: 0.4;
-            background-color: #1e293b;
-            cursor: default;
-        }
-        .player-card.is-you {
-            background-color: #1d4ed8;
-            border-left-color: #38bdf8;
-        }
-        .player-card.voting-active:hover {
-            background-color: #475569;
-            border-color: #facc15;
-        }
-        .player-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            font-weight: bold;
-        }
-        .player-details {
-            font-size: 0.8rem;
-            color: #94a3b8;
-        }
-        .center-stage {
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            gap: 15px;
-            overflow: hidden;
-        }
-        .game-status-box {
-            background-color: #1e293b;
-            padding: 15px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid #475569;
-        }
-        .phase-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #facc15;
-        }
-        .timer-display {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #ef4444;
-            background-color: #0f172a;
-            padding: 5px 15px;
-            border-radius: 6px;
-        }
-        .chat-box {
-            flex: 1;
-            background-color: #1e293b;
-            border-radius: 8px;
-            border: 1px solid #475569;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .chat-messages {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .message-item {
-            background-color: #334155;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.95rem;
-            word-break: break-word;
-        }
-        .message-item span {
-            font-weight: bold;
-            color: #38bdf8;
-            margin-right: 5px;
-        }
-        .chat-input-area {
-            display: flex;
-            padding: 10px;
-            background-color: #0f172a;
-            border-top: 1px solid #475569;
-        }
-        .chat-input-area input {
-            flex: 1;
-            padding: 10px;
-            border-radius: 6px;
-            border: none;
-            background-color: #334155;
-            color: white;
-            font-size: 0.95rem;
-            outline: none;
-        }
-        .chat-input-area button {
-            margin-left: 10px;
-            padding: 10px 20px;
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-        .chat-input-area button:hover {
-            background-color: #1d4ed8;
-        }
-        .sidebar-right {
-            background-color: #1e293b;
-            border-left: 2px solid #334155;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            overflow-y: auto;
-        }
-        .role-card {
-            background-color: #334155;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border: 1px solid #475569;
-        }
-        .role-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #a855f7;
-            margin-top: 5px;
-        }
-        .wolf-chat-container {
-            display: none; 
-            flex-direction: column;
-            background-color: #111827;
-            border-radius: 8px;
-            border: 1px solid #991b1b;
-            overflow: hidden;
-            height: 250px;
-        }
-        .wolf-header {
-            background-color: #991b1b;
-            color: white;
-            padding: 8px;
-            font-size: 0.9rem;
-            font-weight: bold;
-            text-align: center;
-        }
-        .wolf-messages {
-            flex: 1;
-            padding: 10px;
-            overflow-y: auto;
-            font-size: 0.85rem;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-        .wolf-msg-item {
-            background-color: #1f2937;
-            padding: 6px 10px;
-            border-radius: 4px;
-            border-left: 3px solid #ef4444;
-        }
-        .wolf-msg-item span {
-            color: #f87171;
-            font-weight: bold;
-        }
-        .btn-find-match {
-            width: 100%;
-            padding: 15px;
-            background-color: #16a34a;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .btn-find-match:hover {
-            background-color: #15803d;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        header { background-color: #1e293b; padding: 15px 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; }
+        h1 { font-size: 1.5rem; color: #38bdf8; }
+        .room-info { font-size: 1rem; color: #cbd5e1; }
+        .main-container { display: grid; grid-template-columns: 320px 1fr 350px; flex: 1; overflow: hidden; }
+        .sidebar-left { background-color: #1e293b; border-right: 2px solid #334155; padding: 15px; overflow-y: auto; }
+        .sidebar-left h3 { margin-bottom: 10px; font-size: 1.1rem; color: #f43f5e; }
+        .player-card { background-color: #334155; padding: 10px; margin-bottom: 8px; border-radius: 6px; display: flex; flex-direction: column; gap: 4px; border-left: 4px solid #64748b; cursor: pointer; transition: 0.2s; }
+        .player-card.alive { border-left-color: #22c55e; }
+        .player-card.dead { border-left-color: #ef4444; opacity: 0.4; background-color: #1e293b; cursor: default; }
+        .player-card.is-you { background-color: #1d4ed8; border-left-color: #38bdf8; }
+        .player-row { display: flex; justify-content: space-between; font-size: 0.9rem; font-weight: bold; }
+        .player-details { font-size: 0.8rem; color: #94a3b8; }
+        .center-stage { display: flex; flex-direction: column; padding: 20px; gap: 15px; overflow: hidden; }
+        .game-status-box { background-color: #1e293b; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #475569; }
+        .phase-title { font-size: 1.2rem; font-weight: bold; color: #facc15; }
+        .timer-display { font-size: 1.5rem; font-weight: bold; color: #ef4444; background-color: #0f172a; padding: 5px 15px; border-radius: 6px; }
+        .chat-box { flex: 1; background-color: #1e293b; border-radius: 8px; border: 1px solid #475569; display: flex; flex-direction: column; overflow: hidden; }
+        .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .message-item { background-color: #334155; padding: 8px 12px; border-radius: 6px; font-size: 0.95rem; word-break: break-word; }
+        .message-item span { font-weight: bold; color: #38bdf8; margin-right: 5px; }
+        .chat-input-area { display: flex; padding: 10px; background-color: #0f172a; border-top: 1px solid #475569; }
+        .chat-input-area input { flex: 1; padding: 10px; border-radius: 6px; border: none; background-color: #334155; color: white; font-size: 0.95rem; outline: none; }
+        .chat-input-area button { margin-left: 10px; padding: 10px 20px; background-color: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .sidebar-right { background-color: #1e293b; border-left: 2px solid #334155; padding: 15px; display: flex; flex-direction: column; gap: 15px; overflow-y: auto; }
+        .role-card { background-color: #334155; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #475569; }
+        .role-title { font-size: 1.1rem; font-weight: bold; color: #a855f7; margin-top: 5px; }
+        .night-action-box { background-color: #1e1b4b; border: 1px solid #6366f1; padding: 12px; border-radius: 8px; display: none; flex-direction: column; gap: 8px; }
+        .night-action-box h4 { color: #818cf8; font-size: 0.95rem; }
+        .night-action-box select, .night-action-box button { padding: 6px; border-radius: 4px; border: none; font-size: 0.9rem; }
+        .night-action-box button { background-color: #4f46e5; color: white; font-weight: bold; cursor: pointer; }
+        .wolf-chat-container { display: none; flex-direction: column; background-color: #111827; border-radius: 8px; border: 1px solid #991b1b; overflow: hidden; height: 220px; }
+        .wolf-header { background-color: #991b1b; color: white; padding: 8px; font-size: 0.9rem; font-weight: bold; text-align: center; }
+        .wolf-messages { flex: 1; padding: 10px; overflow-y: auto; font-size: 0.85rem; display: flex; flex-direction: column; gap: 6px; }
+        .wolf-msg-item { background-color: #1f2937; padding: 6px 10px; border-radius: 4px; border-left: 3px solid #ef4444; }
+        .wolf-msg-item span { color: #f87171; font-weight: bold; }
+        .btn-find-match { width: 100%; padding: 15px; background-color: #16a34a; color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🐺 Ma Sói Sinh Tử - 12 Người (Đêm & Ngày)</h1>
+        <h1>🐺 Ma Sói Sinh Tử - 12 Người (Pha Đêm & Ngày Đầy Đủ)</h1>
         <div class="room-info" id="roomInfo">Trạng thái: Chưa vào phòng</div>
     </header>
 
@@ -279,7 +70,7 @@
 
             <div class="chat-box">
                 <div class="chat-messages" id="chatMessages">
-                    <div class="message-item"><span>[Hệ thống]:</span> Chào mừng bạn đến với Ma Sói Sinh Tử! Nhấn tìm trận để bắt đầu vòng chu kỳ Đêm và Ngày.</div>
+                    <div class="message-item"><span>[Hệ thống]:</span> Chào mừng bạn! Nhấn tìm trận để bắt đầu chu kỳ Đêm & Ngày.</div>
                 </div>
                 <div class="chat-input-area">
                     <input type="text" id="chatInput" placeholder="Chờ đến lượt biện luận ban ngày..." disabled>
@@ -296,12 +87,20 @@
                 <div class="role-title" id="roleTitle">Đang chia bài...</div>
             </div>
 
+            <!-- Bảng thao tác ban đêm dành riêng cho bạn -->
+            <div class="night-action-box" id="nightActionBox">
+                <h4 id="nightActionTitle">🌙 Hành động ban đêm</h4>
+                <select id="nightTargetSelect"></select>
+                <button onclick="submitNightAction()">Xác Nhận Hành Động</button>
+                <div id="nightActionResult" style="font-size: 0.85rem; color: #38bdf8; margin-top: 5px;"></div>
+            </div>
+
             <div class="wolf-chat-container" id="wolfChatSection">
-                <div class="wolf-header">🛑 KÊNH CHAT SÓI ĐỒNG MINH (ẨN DANH)</div>
+                <div class="wolf-header">🛑 CHAT SÓI ĐỒNG MINH (ẨN DANH)</div>
                 <div class="wolf-messages" id="wolfMessages"></div>
                 <div class="chat-input-area">
                     <input type="text" id="wolfInput" placeholder="Bàn bạc cắn người...">
-                    <button id="btnSendWolf" onclick="sendWolfMessage()">Gửi</button>
+                    <button onclick="sendWolfMessage()">Gửi</button>
                 </div>
             </div>
         </div>
@@ -310,8 +109,7 @@
     <script>
         const socket = io();
         let currentRoomID = null;
-        let mySlotID = "[01]";
-        let isImWolf = false;
+        let myRole = '';
         let canVoteNow = false;
 
         function findMatch() {
@@ -321,63 +119,80 @@
 
         socket.on('match_started', (data) => {
             currentRoomID = data.roomID;
-            isImWolf = data.isWolf;
-            document.getElementById('roomInfo').innerText = `Phòng: ${data.roomID} | Ô của bạn: ${mySlotID}`;
+            myRole = data.role;
+            document.getElementById('roomInfo').innerText = `Phòng: ${data.roomID} | Ô của bạn: ${data.mySlot}`;
             document.getElementById('roleCard').style.display = 'block';
+            document.getElementById('roleTitle').innerText = myRole;
 
-            const wolfChatSection = document.getElementById('wolfChatSection');
-            if (isImWolf) {
-                wolfChatSection.style.display = 'flex';
-                document.getElementById('roleTitle').innerText = "Ma Sói (Phe Hung Ác)";
+            if (data.isWolf) {
+                document.getElementById('wolfChatSection').style.display = 'flex';
                 document.getElementById('roleTitle').style.color = "#ef4444";
             } else {
-                wolfChatSection.style.display = 'none';
-                document.getElementById('roleTitle').innerText = "Dân Làng / Chức Năng";
+                document.getElementById('wolfChatSection').style.display = 'none';
                 document.getElementById('roleTitle').style.color = "#22c55e";
             }
             renderPlayers(data.players);
         });
 
-        function renderPlayers(players) {
-            const listContainer = document.getElementById('playersList');
-            listContainer.innerHTML = '';
-            players.forEach(p => {
-                const card = document.createElement('div');
-                card.className = `player-card ${p.isAlive ? 'alive' : 'dead'} ${p.isYou ? 'is-you' : ''} ${canVoteNow && p.isAlive && !p.isYou ? 'voting-active' : ''}`;
-                
-                if (canVoteNow && p.isAlive && !p.isYou) {
-                    card.onclick = () => submitVote(p.slotID);
-                }
+        socket.on('night_action_prompt', (data) => {
+            const box = document.getElementById('nightActionBox');
+            const select = document.getElementById('nightTargetSelect');
+            select.innerHTML = '';
 
-                card.innerHTML = `
-                    <div class="player-row">
-                        <span>${p.slotID} ${p.isYou ? '(Bạn)' : 'Bot AI'}</span>
-                        <span>${p.isAlive ? 'Còn Sống' : 'Tử Thương 💀'}</span>
-                    </div>
-                    <div class="player-details">Hạng: ${p.rank} | Giới tính: ${p.gender}</div>
-                `;
-                listContainer.appendChild(card);
-            });
+            if (myRole === 'Sói' || myRole === 'Tiên Tri' || myRole === 'Bảo Vệ' || myRole === 'Phù Thủy') {
+                box.style.display = 'flex';
+                document.getElementById('nightActionTitle').innerText = `🌙 Hành động đêm (${myRole})`;
+                
+                data.players.forEach(p => {
+                    if (p.isAlive) {
+                        let opt = document.createElement('option');
+                        opt.value = p.slotID;
+                        opt.innerText = `${p.slotID} ${p.isYou ? '(Bạn)' : ''}`;
+                        select.appendChild(opt);
+                    }
+                });
+            } else {
+                box.style.display = 'none';
+            }
+        });
+
+        function submitNightAction() {
+            const target = document.getElementById('nightTargetSelect').value;
+            let actionType = '';
+            if (myRole === 'Sói') actionType = 'wolf';
+            else if (myRole === 'Tiên Tri') actionType = 'seer';
+            else if (myRole === 'Bảo Vệ') actionType = 'guard';
+            else if (myRole === 'Phù Thủy') actionType = 'witch_kill';
+
+            socket.emit('submit_night_action', { roomID: currentRoomID, actionType, target });
+            document.getElementById('nightActionResult').innerText = `Đã chọn mục tiêu: ${target}`;
         }
+
+        socket.on('seer_result', (data) => {
+            document.getElementById('nightActionResult').innerText = `Soi thẻ ${data.target}: Vai trò là [ ${data.role} ]`;
+        });
 
         socket.on('phase_change', (data) => {
             document.getElementById('phaseTitle').innerText = data.phase;
             document.getElementById('timerDisplay').innerText = data.time;
-            
             canVoteNow = false;
             renderPlayers(data.players);
+
+            if (!data.phase.includes("PHASE BAN ĐÊM")) {
+                document.getElementById('nightActionBox').style.display = 'none';
+                document.getElementById('nightActionResult').innerText = '';
+            }
 
             const chatInput = document.getElementById('chatInput');
             const btnSend = document.getElementById('btnSend');
             if (data.phase.includes("Phát biểu ban ngày: [01]")) {
                 chatInput.disabled = false;
                 btnSend.disabled = false;
-                chatInput.placeholder = "Nhập nội dung biện luận ban ngày...";
+                chatInput.placeholder = "Nhập nội dung biện luận...";
                 chatInput.focus();
             } else {
                 chatInput.disabled = true;
                 btnSend.disabled = true;
-                chatInput.placeholder = "Chờ đến lượt biện luận ban ngày...";
             }
         });
 
@@ -387,13 +202,12 @@
 
         socket.on('enable_voting', (data) => {
             canVoteNow = true;
-            appendSystemMessage("HỆ THỐNG", "Vòng biểu quyết treo cổ ban ngày đã mở! Hãy click chọn một ô người chơi ở cột trái.");
+            appendSystemMessage("HỆ THỐNG", "Vòng biểu quyết treo cổ đã mở! Click chọn một ô bên trái.");
             renderPlayers(data.players);
         });
 
         socket.on('bot_chat', (data) => {
-            const senderName = data.slot === '' ? '[Hệ Thống]' : `Ô ${data.slot}`;
-            appendSystemMessage(senderName, data.message);
+            appendSystemMessage(data.slot === '' ? '[Hệ Thống]' : `Ô ${data.slot}`, data.message);
         });
 
         socket.on('receive_message', (data) => {
@@ -401,42 +215,50 @@
         });
 
         socket.on('receive_wolf_message', (data) => {
-            if (isImWolf) {
-                const box = document.getElementById('wolfMessages');
-                const msg = document.createElement('div');
-                msg.className = 'wolf-msg-item';
-                msg.innerHTML = `<span>${data.sender}:</span> ${data.message}`;
-                box.appendChild(msg);
-                box.scrollTop = box.scrollHeight;
-            }
+            const box = document.getElementById('wolfMessages');
+            const msg = document.createElement('div');
+            msg.className = 'wolf-msg-item';
+            msg.innerHTML = `<span>${data.sender}:</span> ${data.message}`;
+            box.appendChild(msg);
+            box.scrollTop = box.scrollHeight;
         });
 
         socket.on('vote_recorded', (data) => {
-            appendSystemMessage("BỎ PHIẾU", `Người chơi ${data.voter} đã bỏ phiếu treo cổ nhắm vào ô ${data.target}`);
+            appendSystemMessage("BỎ PHIẾU", `Người chơi ${data.voter} đã vote treo cổ ô ${data.target}`);
         });
 
         socket.on('player_died', (data) => {
-            appendSystemMessage("TỬ THƯƠNG", `Người chơi ô định danh ${data.slotID} ${data.reason}.`);
+            appendSystemMessage("TỬ THƯƠNG", `Ô định danh ${data.slotID} ${data.reason}.`);
         });
 
         socket.on('game_over', (data) => {
-            appendSystemMessage("KẾT THÚC", `Trận đấu khép lại! Chiến thắng chung cuộc thuộc về: ${data.winner}`);
+            appendSystemMessage("KẾT THÚC", `Trận đấu khép lại! Phe chiến thắng: ${data.winner}`);
             alert(`Trận đấu kết thúc! ${data.winner} dành chiến thắng.`);
         });
 
-        function appendSystemMessage(sender, text) {
-            const box = document.getElementById('chatMessages');
-            const msg = document.createElement('div');
-            msg.className = 'message-item';
-            msg.innerHTML = `<span>[${sender}]:</span> ${text}`;
-            box.appendChild(msg);
-            box.scrollTop = box.scrollHeight;
+        function renderPlayers(players) {
+            const listContainer = document.getElementById('playersList');
+            listContainer.innerHTML = '';
+            players.forEach(p => {
+                const card = document.createElement('div');
+                card.className = `player-card ${p.isAlive ? 'alive' : 'dead'} ${p.isYou ? 'is-you' : ''}`;
+                if (canVoteNow && p.isAlive && !p.isYou) {
+                    card.onclick = () => {
+                        socket.emit('submit_vote', { roomID: currentRoomID, voter: '[01]', target: p.slotID });
+                        canVoteNow = false;
+                        appendSystemMessage("HỆ THỐNG", `Bạn đã vote treo cổ ô: ${p.slotID}`);
+                    };
+                }
+                card.innerHTML = `
+                    <div class="player-row">
+                        <span>${p.slotID} ${p.isYou ? '(Bạn)' : ''}</span>
+                        <span>${p.isAlive ? 'Còn Sống' : 'Tử Thương 💀'}</span>
+                    </div>
+                    <div class="player-details">Hạng: ${p.rank} | Giới tính: ${p.gender}</div>
+                `;
+                listContainer.appendChild(card);
+            });
         }
-
-        document.getElementById('chatInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') sendPublicMessage();
-        });
-        document.getElementById('btnSend').onclick = sendPublicMessage;
 
         function sendPublicMessage() {
             const input = document.getElementById('chatInput');
@@ -450,7 +272,7 @@
         function sendWolfMessage() {
             const input = document.getElementById('wolfInput');
             const txt = input.value.trim();
-            if (!txt || !currentRoomID || !isImWolf) return;
+            if (!txt || !currentRoomID) return;
             
             const box = document.getElementById('wolfMessages');
             const msg = document.createElement('div');
@@ -463,12 +285,8 @@
             input.value = '';
         }
 
-        function submitVote(targetSlotID) {
-            if (!canVoteNow) return;
-            socket.emit('submit_vote', { roomID: currentRoomID, voter: '[01]', target: targetSlotID });
-            canVoteNow = false;
-            appendSystemMessage("HỆ THỐNG", `Bạn đã chốt bỏ phiếu treo cổ ô: ${targetSlotID}`);
-        }
+        document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendPublicMessage(); });
+        document.getElementById('btnSend').onclick = sendPublicMessage;
     </script>
 </body>
 </html>
