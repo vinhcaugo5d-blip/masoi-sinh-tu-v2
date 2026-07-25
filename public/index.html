@@ -1,4 +1,316 @@
-<script>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ma Sói Sinh Tử - 12 Người (Chiến Thần AI)</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        header {
+            background-color: #1e293b;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #334155;
+        }
+        h1 {
+            font-size: 1.5rem;
+            color: #38bdf8;
+        }
+        .room-info {
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 320px 1fr 350px;
+            flex: 1;
+            overflow: hidden;
+        }
+        .sidebar-left {
+            background-color: #1e293b;
+            border-right: 2px solid #334155;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        .sidebar-left h3 {
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+            color: #f43f5e;
+        }
+        .player-card {
+            background-color: #334155;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: all 0.3s;
+            border-left: 4px solid #64748b;
+            cursor: pointer;
+        }
+        .player-card.alive {
+            border-left-color: #22c55e;
+        }
+        .player-card.dead {
+            border-left-color: #ef4444;
+            opacity: 0.4;
+            background-color: #1e293b;
+            cursor: default;
+        }
+        .player-card.is-you {
+            background-color: #1d4ed8;
+            border-left-color: #38bdf8;
+        }
+        .player-card.voting-active:hover {
+            background-color: #475569;
+            border-color: #facc15;
+        }
+        .player-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .player-details {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .center-stage {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            overflow: hidden;
+        }
+        .game-status-box {
+            background-color: #1e293b;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #475569;
+        }
+        .phase-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #facc15;
+        }
+        .timer-display {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ef4444;
+            background-color: #0f172a;
+            padding: 5px 15px;
+            border-radius: 6px;
+        }
+        .chat-box {
+            flex: 1;
+            background-color: #1e293b;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message-item {
+            background-color: #334155;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            word-break: break-word;
+        }
+        .message-item span {
+            font-weight: bold;
+            color: #38bdf8;
+            margin-right: 5px;
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 10px;
+            background-color: #0f172a;
+            border-top: 1px solid #475569;
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: none;
+            background-color: #334155;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        .chat-input-area button {
+            margin-left: 10px;
+            padding: 10px 20px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .chat-input-area button:hover {
+            background-color: #1d4ed8;
+        }
+        .sidebar-right {
+            background-color: #1e293b;
+            border-left: 2px solid #334155;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .role-card {
+            background-color: #334155;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #475569;
+        }
+        .role-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #a855f7;
+            margin-top: 5px;
+        }
+        .wolf-chat-container {
+            display: none; 
+            flex-direction: column;
+            background-color: #111827;
+            border-radius: 8px;
+            border: 1px solid #991b1b;
+            overflow: hidden;
+            height: 250px;
+        }
+        .wolf-header {
+            background-color: #991b1b;
+            color: white;
+            padding: 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        .wolf-messages {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .wolf-msg-item {
+            background-color: #1f2937;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border-left: 3px solid #ef4444;
+        }
+        .wolf-msg-item span {
+            color: #f87171;
+            font-weight: bold;
+        }
+        .btn-find-match {
+            width: 100%;
+            padding: 15px;
+            background-color: #16a34a;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-find-match:hover {
+            background-color: #15803d;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🐺 Ma Sói Sinh Tử - 12 Người (Chiến Thần AI)</h1>
+        <div class="room-info" id="roomInfo">Trạng thái: Chưa vào phòng</div>
+    </header>
+
+    <div class="main-container">
+        <!-- CỘT TRÁI: DANH SÁCH 12 Ô ĐỊNH DANH -->
+        <div class="sidebar-left">
+            <h3>Danh Sách Ô (12/12)</h3>
+            <div id="playersList"></div>
+        </div>
+
+        <!-- CỘT GIỮA: TRẠNG THÁI & CHAT CÔNG KHAI -->
+        <div class="center-stage">
+            <div class="game-status-box">
+                <div>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">Giai đoạn hiện tại:</div>
+                    <div class="phase-title" id="phaseTitle">Bấm "Tìm Trận" để bắt đầu</div>
+                </div>
+                <div class="timer-display" id="timerDisplay">--</div>
+            </div>
+
+            <div class="chat-box">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message-item"><span>[Hệ thống]:</span> Chào mừng bạn đến với Ma Sói Sinh Tử! Nhấn tìm trận để ghép phòng với 11 Bot Qwen-72B.</div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="Chờ đến lượt biện luận..." disabled>
+                    <button id="btnSend" disabled>Gửi</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CỘT PHẢI: THÔNG TIN VAI TRÒ VÀ KÊNH SÓI BẢO MẬT -->
+        <div class="sidebar-right">
+            <button class="btn-find-match" id="btnFindMatch" onclick="findMatch()">Tìm Trận Đấu</button>
+
+            <div class="role-card" id="roleCard" style="display: none;">
+                <div>Vai trò bí mật của bạn:</div>
+                <div class="role-title" id="roleTitle">Đang chia bài...</div>
+            </div>
+
+            <div class="wolf-chat-container" id="wolfChatSection">
+                <div class="wolf-header">🛑 KÊNH CHAT SÓI ĐỒNG MINH (ẨN DANH)</div>
+                <div class="wolf-messages" id="wolfMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="wolfInput" placeholder="Bàn bạc cắn người...">
+                    <button id="btnSendWolf" onclick="sendWolfMessage()">Cắn</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
         const socket = io();
         let currentRoomID = null;
         let mySlotID = "[01]";
@@ -10,28 +322,25 @@
             socket.emit('find_match');
         }
 
-        // 1. Đồng bộ khởi tạo bàn đấu từ Server
         socket.on('match_started', (data) => {
             currentRoomID = data.roomID;
             isImWolf = data.isWolf;
             document.getElementById('roomInfo').innerText = `Phòng: ${data.roomID} | Ô của bạn: ${mySlotID}`;
             document.getElementById('roleCard').style.display = 'block';
 
-            // Xử lý bảo mật hiển thị kênh chat Sói
             const wolfChatSection = document.getElementById('wolfChatSection');
             if (isImWolf) {
-                wolfChatSection.style.display = 'flex'; // CHỈ SÓI MỚI NHÌN THẤY VÀ DÙNG KÊNH CHAT NÀY
+                wolfChatSection.style.display = 'flex';
                 document.getElementById('roleTitle').innerText = "Ma Sói (Phe Hung Ác)";
                 document.getElementById('roleTitle').style.color = "#ef4444";
             } else {
-                wolfChatSection.style.display = 'none'; // Người chơi khác bị giấu hoàn toàn khỏi DOM
+                wolfChatSection.style.display = 'none';
                 document.getElementById('roleTitle').innerText = "Dân Làng / Chức Năng";
                 document.getElementById('roleTitle').style.color = "#22c55e";
             }
             renderPlayers(data.players);
         });
 
-        // 2. Render real-time trạng thái sống/chết của 12 ô định danh
         function renderPlayers(players) {
             const listContainer = document.getElementById('playersList');
             listContainer.innerHTML = '';
@@ -39,7 +348,6 @@
                 const card = document.createElement('div');
                 card.className = `player-card ${p.isAlive ? 'alive' : 'dead'} ${p.isYou ? 'is-you' : ''} ${canVoteNow && p.isAlive && !p.isYou ? 'voting-active' : ''}`;
                 
-                // Nếu đang trong phase vote, click vào thẻ người chơi khác để gửi lệnh vote lên server
                 if (canVoteNow && p.isAlive && !p.isYou) {
                     card.onclick = () => submitVote(p.slotID);
                 }
@@ -55,16 +363,13 @@
             });
         }
 
-        // 3. Xử lý đồng bộ chuyển Phase và đóng/mở quyền Chat thực tế
         socket.on('phase_change', (data) => {
             document.getElementById('phaseTitle').innerText = data.phase;
             document.getElementById('timerDisplay').innerText = data.time;
             
-            // Đóng quyền vote mặc định trừ khi được lệnh của server công bố
             canVoteNow = false;
             renderPlayers(data.players);
 
-            // Mở cổng nhập chat công khai nếu đến đúng lượt nói của người chơi chính [01]
             const chatInput = document.getElementById('chatInput');
             const btnSend = document.getElementById('btnSend');
             if (data.phase.includes("Phát biểu 15s: [01]")) {
@@ -79,19 +384,16 @@
             }
         });
 
-        // 4. Cập nhật đồng hồ đếm ngược
         socket.on('update_timer', (data) => {
             document.getElementById('timerDisplay').innerText = data.time;
         });
 
-        // 5. Lắng nghe thông báo kích hoạt biểu quyết của server
         socket.on('enable_voting', (data) => {
             canVoteNow = true;
             appendSystemMessage("HỆ THỐNG", "Vòng bỏ phiếu đã mở! Hãy click chọn một ô người chơi ở cột trái để dồn phiếu treo cổ.");
             renderPlayers(data.players);
         });
 
-        // 6. Xử lý nhận tin nhắn các kênh Chat công khai và ẩn danh
         socket.on('bot_chat', (data) => {
             const senderName = data.slot === '' ? '[Hệ Thống]' : `Ô ${data.slot}`;
             appendSystemMessage(senderName, data.message);
@@ -102,7 +404,6 @@
         });
 
         socket.on('receive_wolf_message', (data) => {
-            // Chỉ nhận và hiển thị nếu client hiện tại thuộc băng đảng Sói
             if (isImWolf) {
                 const box = document.getElementById('wolfMessages');
                 const msg = document.createElement('div');
@@ -126,7 +427,6 @@
             alert(`Trận đấu kết thúc! ${data.winner} dành chiến thắng.`);
         });
 
-        // --- HÀM GỬI DỮ LIỆU LÊN SERVER ---
         function appendSystemMessage(sender, text) {
             const box = document.getElementById('chatMessages');
             const msg = document.createElement('div');
@@ -136,7 +436,6 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        // Gửi tin nhắn biện luận công khai ban ngày
         document.getElementById('chatInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') sendPublicMessage();
         });
@@ -151,7 +450,6 @@
             input.value = '';
         }
 
-        // Gửi lệnh chat riêng ẩn danh ban đêm của Sói
         function sendWolfMessage() {
             const input = document.getElementById('wolfInput');
             const txt = input.value.trim();
@@ -168,11 +466,12 @@
             input.value = '';
         }
 
-        // Gửi lệnh bỏ phiếu biểu quyết treo cổ lên server
         function submitVote(targetSlotID) {
             if (!canVoteNow) return;
             socket.emit('submit_vote', { roomID: currentRoomID, voter: '[01]', target: targetSlotID });
-            canVoteNow = false; // Khóa chức năng chọn sau khi dồn phiếu xong
+            canVoteNow = false;
             appendSystemMessage("HỆ THỐNG", `Bạn đã chốt bỏ phiếu treo cổ ô: ${targetSlotID}`);
         }
     </script>
+</body>
+</html>
