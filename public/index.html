@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đấu Trường Ma Sói Sinh Tử 12 Người</title>
+    <style>
+        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; background: #1e293b; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
+        button { background: #e11d48; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+        button:hover { background: #be123c; }
+        .hidden { display: none; }
+        .player-box { background: #334155; margin: 8px 0; padding: 10px; border-radius: 6px; text-align: left; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐺 MA SÓI SINH TỬ 12 NGƯỜI</h1>
+        <div id="lobby-section">
+            <p>Hồ sơ: <b>SurvivorX</b> | Rank: <span style="color: #38bdf8;">Kim Cương</span> | Uy Tín: 100/100</p>
+            <button onclick="findMatch()">[ 1 ] Quét Ghép Trận Ngẫu Nhiên (Solo)</button>
+        </div>
+        <div id="queue-section" class="hidden">
+            <h2 id="queue-status">Đang quét tìm 12 người... (15s)</h2>
+        </div>
+        <div id="game-section" class="hidden">
+            <h2>⚔️ PHÒNG ĐẤU ĐÃ THIẾT LẬP</h2>
+            <div id="player-list"></div>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let countdown = 15, timer;
+        function findMatch() {
+            document.getElementById('lobby-section').classList.add('hidden');
+            document.getElementById('queue-section').classList.remove('hidden');
+            socket.emit('find_match', { name: 'SurvivorX', rank: 'Kim Cương' });
+            timer = setInterval(() => {
+                countdown--;
+                document.getElementById('queue-status').innerText = `Đang tìm trận... (${countdown}s)`;
+                if (countdown <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('queue-status').innerText = `Ghép trận tự động hoàn tất. Đang nạp Bot AI...`;
+                }
+            }, 1000);
+        }
+        socket.on('match_started', (data) => {
+            clearInterval(timer);
+            document.getElementById('queue-section').classList.add('hidden');
+            document.getElementById('game-section').classList.remove('hidden');
+            let listHTML = '<h3>Danh sách định danh ván đấu:</h3>';
+            data.players.forEach(p => {
+                listHTML += `<div class="player-box"><b>${p.id}</b> — Giới tính: ${p.gender} | Nhân cách: ${p.personality}</div>`;
+            });
+            document.getElementById('player-list').innerHTML = listHTML;
+        });
+    </script>
+</body>
+</html>
