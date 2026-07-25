@@ -1,7 +1,7 @@
 {
   "name": "ma-soi-sinh-tu",
   "version": "1.0.0",
-  "description": "Trò chơi Ma Sói Sinh Tử 12 người tích hợp AI Qwen-72B chạy trên Node.js và Socket.IO",
+  "description": "Trò chơi Ma Sói Sinh Tử 12 người tích hợp AI ChatGPT chạy trên Node.js và Socket.IO",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
