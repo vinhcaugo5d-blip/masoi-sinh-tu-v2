@@ -26,21 +26,25 @@ io.on('connection', (socket) => {
         if (!waitingPlayers.some(p => p.socket.id === socket.id)) {
             waitingPlayers.push({ socket, data: userData });
         }
-        if (waitingPlayers.length >= 12) {
-            let matchGroup = waitingPlayers.splice(0, 12);
-            let roomID = 'room_' + Date.now();
-            let roomPlayers = matchGroup.map((p, index) => {
+
+        // Tự động gom đủ hoặc tạo phòng ghép nhanh
+        if (waitingPlayers.length >= 1) {
+            let matchGroup = waitingPlayers.splice(0, 1);
+            let randomRoomID = 'MS' + Math.floor(1000 + Math.random() * 9000);
+            
+            let roomPlayers = [];
+            for (let i = 0; i < 12; i++) {
                 let gender = Math.random() < 0.5 ? 'Nam' : 'Nữ';
-                return {
-                    id: `[${(index + 1).toString().padStart(2, '0')}]`,
-                    name: p.data.name || `Bot_${index}`,
-                    gender: gender,
-                    personality: getRandomPersonality(),
-                    rank: p.data.rank || 'Kim Cương'
-                };
-            });
-            matchGroup.forEach(p => p.socket.join(roomID));
-            io.to(roomID).emit('match_started', { roomID, players: roomPlayers });
+                let idName = `[${(i + 1).toString().padStart(2, '0')}]`;
+                if (i === 0) {
+                    roomPlayers.push({ id: idName, name: matchGroup[0].data.name, gender: gender, personality: "Chiến thuật gia", rank: matchGroup[0].data.stars });
+                } else {
+                    roomPlayers.push({ id: idName, name: `ThànhVên_${Math.floor(100 + Math.random() * 900)}`, gender: gender, personality: getRandomPersonality(), rank: 'Kim Cương' });
+                }
+            }
+
+            matchGroup[0].socket.join(randomRoomID);
+            io.to(randomRoomID).emit('match_started', { roomID: randomRoomID, players: roomPlayers });
         }
     });
 
