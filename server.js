@@ -11,45 +11,44 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 let activeRooms = {};
 
-// Hàm gọi Qwen-72B tạo phát biểu sắc sảo theo vai trò
-async function callQwen72BAPI(bot, playersContext, recentMessages) {
+// Hàm gọi OpenAI ChatGPT API cho bot phát biểu ban ngày
+async function callChatGPTAPI(bot, playersContext, recentMessages) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     let roleDirective = "";
     if (bot.role === 'Sói') {
-        roleDirective = "Bạn là Sói giả dạng Dân Làng. Hãy tìm cách chối tội, bẻ lái hướng mũi dùi sang người khác.";
+        roleDirective = "Bạn là Sói giả dạng Dân Làng. Hãy tìm cách chối tội, bẻ lái hoặc công kích người chơi [01] một cách sắc sảo.";
     } else if (bot.role === 'Tiên Tri') {
-        roleDirective = "Bạn là Tiên Tri. Hãy khéo léo tung hint dẫn dắt dân làng mà không để Sói thịt sớm.";
+        roleDirective = "Bạn là Tiên Tri. Hãy khéo léo tung hint dẫn dắt dân làng mà không để Sói phát hiện.";
     } else if (bot.role === 'Bảo Vệ' || bot.role === 'Phù Thủy') {
-        roleDirective = "Bạn có chức năng bảo vệ phe thiện. Hãy tỏ ra sắc sảo, chất vấn logic sơ hở của kẻ khả nghi.";
+        roleDirective = "Bạn có chức năng bảo vệ phe thiện. Hãy tỏ ra sắc sảo, chất vấn logic của người chơi khác.";
     } else {
-        roleDirective = "Bạn là Dân Làng thuần túy. Hãy dựa vào phát ngôn để đặt câu hỏi hoặc hùa theo hướng vote.";
+        roleDirective = "Bạn là Dân Làng thuần túy. Hãy dựa vào những gì người chơi [01] vừa nói để chất vấn hoặc tranh luận lại.";
     }
 
     try {
-        const prompt = `Bạn là người chơi định danh ${bot.slotID}, giới tính ${bot.gender}, rank ${bot.rank} trong game Ma Sói 12 người.
+        const prompt = `Bạn là người chơi ${bot.slotID} (${bot.gender}, rank ${bot.rank}) trong game Ma Sói 12 người.
 Nhiệm vụ & Đối sách: ${roleDirective}
 Vai trò bí mật (Giữ kín): ${bot.role}.
-Danh sách còn sống: ${JSON.stringify(playersContext.filter(p => p.isAlive).map(p => p.slotID))}.
-Phòng chat gần đây: "${recentMessages || 'Mọi người bắt đầu dò xét nhau'}".
+Lịch sử chat gần đây trong phòng: "${recentMessages || 'Mọi người đang bắt đầu dò xét nhau'}".
 
-Yêu cầu: Viết MỘT câu phát biểu ngắn gọn (dưới 25 từ), sắc sảo, đậm chất game thủ bằng tiếng Việt. Tuyệt đối không dùng văn mẫu!`;
+Yêu cầu: Viết MỘT câu phát biểu cực kỳ ngắn gọn (dưới 20 từ), tự nhiên như game thủ thật bằng tiếng Việt để phản hồi lại ý kiến của ô [01]. Tuyệt đối không dùng văn mẫu chung chung!`;
 
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer sk-or-v1-YOUR_ACTUAL_API_KEY_HERE',
+                'Authorization': 'Bearer sk-YOUR_OPENAI_API_KEY_HERE', // Thay API Key OpenAI thật của bạn vào đây
             },
             body: JSON.stringify({
-                model: 'qwen/qwen-72b-instruct',
+                model: 'gpt-4o-mini',
                 messages: [
-                    { role: 'system', content: 'Bạn là game thủ chuyên nghiệp chơi Ma Sói, cực kỳ nhạy bén và có chính kiến.' },
+                    { role: 'system', content: 'Bạn là game thủ chuyên nghiệp chơi Ma Sói, cực kỳ nhạy bén, biết cách cãi tay đôi và bám sát ngữ cảnh.' },
                     { role: 'user', content: prompt }
                 ],
-                temperature: 0.95,
-                max_tokens: 80
+                temperature: 0.9,
+                max_tokens: 60
             }),
             signal: controller.signal
         });
@@ -65,9 +64,9 @@ Yêu cầu: Viết MỘT câu phát biểu ngắn gọn (dưới 25 từ), sắc
     } catch (error) {
         clearTimeout(timeoutId);
         if (bot.role === 'Sói') {
-            return `Ô ${bot.slotID}: Ô [01] đang cố tình vu khống để che đậy điều gì đó!`;
+            return `Ô ${bot.slotID}: Tự nhiên [01] hỏi câu vu vơ thế, chắc đang chột dạ à?`;
         } else {
-            return `Ô ${bot.slotID}: Hướng phân tích này có ý đúng, chúng ta cần soi kỹ hành vi mọi người.`;
+            return `Ô ${bot.slotID}: Tôi thấy [01] hỏi hơi lạ, bình tĩnh xem xét đã chứ.`;
         }
     }
 }
@@ -101,7 +100,13 @@ function createNewRoom(roomID, hostSocketID) {
         speakerIndex: 0,
         currentTimer: null,
         votes: {},
-        chatHistory: ""
+        chatHistory: "",
+        nightActions: {
+            wolfTarget: null,
+            guardTarget: null,
+            witchSave: false,
+            witchKill: null
+        }
     };
 
     return activeRooms[roomID];
@@ -114,6 +119,81 @@ function clearRoomTimer(room) {
     }
 }
 
+// BƯỚC 1: KHỞI ĐẦU PHA BAN ĐÊM
+function startNightPhase(roomID) {
+    let room = activeRooms[roomID];
+    if (!room) return;
+
+    // Reset hành động đêm
+    room.nightActions = { wolfTarget: null, guardTarget: null, witchSave: false, witchKill: null };
+    let nightDuration = 15;
+
+    io.to(roomID).emit('phase_change', {
+        phase: "🌙 PHA BAN ĐÊM (Sói cắn, Chức năng hành động)",
+        time: nightDuration,
+        players: room.players
+    });
+
+    clearRoomTimer(room);
+
+    // Bot Sói tự chọn mục tiêu cắn trong đêm
+    let aliveWolves = room.players.filter(p => p.isAlive && p.role === 'Sói' && !p.isYou);
+    let aliveTargets = room.players.filter(p => p.isAlive && p.role !== 'Sói');
+    if (aliveWolves.length > 0 && aliveTargets.length > 0) {
+        let chosenWolfTarget = aliveTargets[Math.floor(Math.random() * aliveTargets.length)].slotID;
+        room.nightActions.wolfTarget = chosenWolfTarget;
+    }
+
+    room.currentTimer = setInterval(() => {
+        nightDuration--;
+        if (nightDuration <= 0) {
+            clearRoomTimer(room);
+            resolveNightPhase(roomID);
+        } else {
+            io.to(roomID).emit('update_timer', { time: nightDuration });
+        }
+    }, 1000);
+}
+
+// BƯỚC 2: TỔNG KẾT KẾT QUẢ ĐÊM QUA & CHUYỂN SANG BAN NGÀY
+function resolveNightPhase(roomID) {
+    let room = activeRooms[roomID];
+    if (!room) return;
+
+    let targetWolf = room.nightActions.wolfTarget;
+    let deadMessages = [];
+
+    if (targetWolf) {
+        let victim = room.players.find(p => p.slotID === targetWolf);
+        if (victim && victim.isAlive) {
+            victim.isAlive = false;
+            deadMessages.push(`Ô định danh ${victim.slotID} đã bị Ma Sói cắn xé vào ban đêm.`);
+            io.to(roomID).emit('player_died', { slotID: victim.slotID, reason: `đã bị Ma Sói cắn sát hại trong đêm` });
+        }
+    }
+
+    if (deadMessages.length === 0) {
+        io.to(roomID).emit('bot_chat', { slot: '', message: "🌙 Đêm qua là một đêm bình yên, không có ai thiệt mạng." });
+    } else {
+        io.to(roomID).emit('bot_chat', { slot: '', message: `☀️ Sáng rồi! ${deadMessages.join(' ')}` });
+    }
+
+    // Kiểm tra xem game đã kết thúc sau đêm chưa
+    let aliveWolves = room.players.filter(p => p.isAlive && p.role === 'Sói').length;
+    let aliveVillagers = room.players.filter(p => p.isAlive && p.role !== 'Sói').length;
+    if (aliveWolves === 0 || aliveWolves >= aliveVillagers) {
+        setTimeout(() => checkGameEnd(roomID), 2000);
+        return;
+    }
+
+    // Chuyển sang pha phát biểu ban ngày
+    setTimeout(() => {
+        room.speakerIndex = 0;
+        runSpeechPhase(roomID);
+    }, 2500);
+}
+
+// BƯỚC 3: PHA PHÁT BIỂU BAN NGÀY
 function runSpeechPhase(roomID) {
     let room = activeRooms[roomID];
     if (!room) return;
@@ -128,10 +208,10 @@ function runSpeechPhase(roomID) {
     let speaker = alivePlayers[room.speakerIndex];
     room.speakerIndex++;
 
-    let speakDuration = 15;
+    let speakDuration = 12;
 
     io.to(roomID).emit('phase_change', { 
-        phase: `Phát biểu 15s: ${speaker.slotID}`, 
+        phase: `☀️ Phát biểu ban ngày: ${speaker.slotID}`, 
         time: speakDuration, 
         players: room.players 
     });
@@ -149,25 +229,26 @@ function runSpeechPhase(roomID) {
     }, 1000);
 
     if (!speaker.isYou) {
-        callQwen72BAPI(speaker, room.players, room.chatHistory).then(messageText => {
+        callChatGPTAPI(speaker, room.players, room.chatHistory).then(messageText => {
             room.chatHistory += ` Ô ${speaker.slotID}: ${messageText}`;
-            if (room.chatHistory.length > 300) room.chatHistory = room.chatHistory.slice(-300);
+            if (room.chatHistory.length > 500) room.chatHistory = room.chatHistory.slice(-500);
             io.to(roomID).emit('bot_chat', { slot: speaker.slotID, message: messageText });
         });
     } else {
-        io.to(roomID).emit('bot_chat', { slot: '[01]', message: "Đến lượt bạn biện luận (15 giây)..." });
+        io.to(roomID).emit('bot_chat', { slot: '[01]', message: "Đến lượt bạn biện luận ban ngày (12 giây)..." });
     }
 }
 
+// BƯỚC 4: PHA BIỂU QUYẾT TREO CỔ BAN NGÀY
 function startVotePhase(roomID) {
     let room = activeRooms[roomID];
     if (!room) return;
 
     room.votes = {};
-    let voteDuration = 20;
+    let voteDuration = 15;
 
     io.to(roomID).emit('phase_change', {
-        phase: "Giai Đoạn Biểu Quyết Treo Cổ",
+        phase: "⚖️ Giai Đoạn Biểu Quyết Treo Cổ Ban Ngày",
         time: voteDuration,
         players: room.players
     });
@@ -187,7 +268,6 @@ function startVotePhase(roomID) {
     }, 1000);
 }
 
-// Tổng kết phiếu bầu thông minh: Bot dùng AI phân tích để vote
 async function resolveVotes(roomID) {
     let room = activeRooms[roomID];
     if (!room) return;
@@ -203,31 +283,22 @@ async function resolveVotes(roomID) {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-            let roleGoal = bot.role === 'Sói' 
-                ? "Bạn là Sói, hãy chọn vote hùa hoặc dắt mũi treo cổ một Dân Làng." 
-                : "Bạn là phe thiện, hãy phân tích lịch sử chat để vote loại bỏ kẻ khả nghi nhất.";
-
-            const prompt = `Bạn là ô ${bot.slotID} (${bot.gender}, rank ${bot.rank}), vai trò: ${bot.role}.
-Mục tiêu: ${roleGoal}
+            const prompt = `Bạn là ô ${bot.slotID}, vai trò: ${bot.role}. 
+Lịch sử chat: "${room.chatHistory || ''}". 
 Danh sách còn sống: ${JSON.stringify(alivePlayers.map(p => p.slotID))}.
-Lịch sử chat: "${room.chatHistory || 'Tranh luận gay gắt'}".
-
 Yêu cầu: Chỉ trả về ĐÚNG MỘT mã số ô bạn muốn vote (Ví dụ: [02], [05],...). Không giải thích!`;
 
-            const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer sk-or-v1-YOUR_ACTUAL_API_KEY_HERE',
+                    'Authorization': 'Bearer sk-YOUR_OPENAI_API_KEY_HERE',
                 },
                 body: JSON.stringify({
-                    model: 'qwen/qwen-72b-instruct',
-                    messages: [
-                        { role: 'system', content: 'Bạn là bot chơi Ma Sói mưu mẹo, quyết định vote dựa trên logic.' },
-                        { role: 'user', content: prompt }
-                    ],
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'user', content: prompt }],
                     temperature: 0.7,
-                    max_tokens: 20
+                    max_tokens: 15
                 }),
                 signal: controller.signal
             });
@@ -276,10 +347,10 @@ Yêu cầu: Chỉ trả về ĐÚNG MỘT mã số ô bạn muốn vote (Ví d�
         let player = room.players.find(p => p.slotID === eliminatedSlot);
         if (player) {
             player.isAlive = false;
-            io.to(roomID).emit('player_died', { slotID: eliminatedSlot, reason: `đã bị cộng đồng biểu quyết treo cổ với ${maxVotes} phiếu` });
+            io.to(roomID).emit('player_died', { slotID: eliminatedSlot, reason: `đã bị cộng đồng treo cổ ban ngày với ${maxVotes} phiếu` });
         }
     } else {
-        io.to(roomID).emit('bot_chat', { slot: '', message: "Kết quả hòa phiếu, không có ai bị treo cổ vòng này." });
+        io.to(roomID).emit('bot_chat', { slot: '', message: "Hòa phiếu, không ai bị treo cổ vòng này." });
     }
 
     setTimeout(() => checkGameEnd(roomID), 2000);
@@ -303,12 +374,11 @@ function checkGameEnd(roomID) {
         return;
     }
 
-    runSpeechPhase(roomID);
+    // Vòng lặp tiếp theo: Quay lại pha Đêm
+    startNightPhase(roomID);
 }
 
 io.on('connection', (socket) => {
-    console.log(`Client kết nối thành công: ${socket.id}`);
-
     socket.on('find_match', () => {
         const roomID = 'ROOM_' + Math.floor(1000 + Math.random() * 9000);
         socket.join(roomID);
@@ -324,8 +394,9 @@ io.on('connection', (socket) => {
             players: room.players
         });
 
+        // Bắt đầu game bằng Pha Ban Đêm đầu tiên
         setTimeout(() => {
-            runSpeechPhase(roomID);
+            startNightPhase(roomID);
         }, 2000);
     });
 
@@ -358,13 +429,9 @@ io.on('connection', (socket) => {
         room.votes[data.voter] = data.target;
         io.to(data.roomID).emit('vote_recorded', { voter: data.voter, target: data.target });
     });
-
-    socket.on('disconnect', () => {
-        console.log(`Client ngắt kết nối: ${socket.id}`);
-    });
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server Ma Sói Sinh Tử đang chạy thành công tại cổng ${PORT}`);
+    console.log(`Server chạy tại cổng ${PORT}`);
 });
