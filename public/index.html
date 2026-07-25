@@ -4,55 +4,157 @@
     <meta charset="UTF-8">
     <title>Đấu Trường Ma Sói Sinh Tử 12 Người</title>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .container { max-width: 700px; margin: 0 auto; background: #1e293b; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.6); }
-        button { background: #e11d48; color: white; border: none; padding: 12px 24px; font-size: 16px; border-radius: 6px; cursor: pointer; margin-top: 15px; font-weight: bold; }
-        button:hover { background: #be123c; }
-        .hidden { display: none; }
-        .player-box { background: #334155; margin: 8px 0; padding: 10px; border-radius: 6px; text-align: left; font-size: 14px; }
+        body { background-color: #090d16; color: #f8fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
+        .main-container { width: 950px; height: 620px; background: linear-gradient(135deg, #1e1b4b, #0f172a); border-radius: 12px; box-shadow: 0 0 30px rgba(225, 29, 72, 0.3); border: 1px solid #334155; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* HEADER SẢNH */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 25px; background: rgba(15, 23, 42, 0.9); border-bottom: 1px solid #334155; }
+        .profile-info { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 50px; height: 50px; background: #e11d48; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; border: 2px solid #f43f5e; }
+        .rank-badge { color: #38bdf8; font-weight: bold; font-size: 14px; }
+
+        /* BODY SẢNH */
+        .content-body { flex: 1; display: flex; justify-content: center; align-items: center; position: relative; padding: 20px; }
+        .hidden { display: none !important; }
+
+        /* NÚT TÌM TRẬN & MENU */
+        .matchmaking-box { text-align: center; }
+        .btn-play { background: linear-gradient(135deg, #f43f5e, #be123c); color: white; border: none; padding: 18px 50px; font-size: 22px; border-radius: 40px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 20px rgba(244, 63, 94, 0.5); transition: 0.2s; text-transform: uppercase; letter-spacing: 2px; }
+        .btn-play:hover { transform: scale(1.05); background: linear-gradient(135deg, #fb7185, #9f1239); }
+        .menu-row { margin-top: 15px; display: flex; gap: 10px; justify-content: center; }
+        .btn-sub { background: #334155; color: #f8fafc; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-sub:hover { background: #475569; }
+
+        /* MÀN HÌNH ĐANG TÌM TRẬN */
+        .searching-screen { text-align: center; }
+        .spinner { width: 70px; height: 70px; border: 6px solid #334155; border-top: 6px solid #e11d48; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* PHÒNG ĐẤU 12 NGƯỜI */
+        .room-screen { width: 100%; height: 100%; display: flex; flex-direction: column; }
+        .room-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .room-title { font-size: 16px; color: #f43f5e; font-weight: bold; }
+        .room-id-tag { background: #334155; padding: 5px 12px; border-radius: 6px; font-size: 13px; color: #38bdf8; font-weight: bold; }
+        .player-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; overflow-y: auto; max-height: 420px; padding: 5px; }
+        .player-card { background: rgba(30, 41, 59, 0.9); border: 1px solid #475569; padding: 10px; border-radius: 8px; font-size: 13px; text-align: left; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🐺 MA SÓI SINH TỬ 12 NGƯỜI</h1>
-        <div id="lobby-section">
-            <p>Hồ sơ: <b>SurvivorX</b> | Rank: <span style="color: #38bdf8;">Kim Cương</span> | Uy Tín: 100/100</p>
-            <button onclick="findMatch()">[ 1 ] Quét Ghép Trận Ngẫu Nhiên (Solo)</button>
+
+    <div class="main-container">
+        <!-- HEADER SẢNH -->
+        <div class="header">
+            <div class="profile-info">
+                <div class="avatar">ID</div>
+                <div>
+                    <div style="font-size: 16px; font-weight: bold;">Người Chơi <span style="color: #94a3b8; font-size: 12px;">[ID: 882104]</span></div>
+                    <div class="rank-badge" id="display-rank">🏆 Đồng III (Sao: 4/10)</div>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: #94a3b8;">Bảo mật IP: <span style="color: #22c55e;">Đã xác thực</span> | Uy Tín: 100</div>
         </div>
-        <div id="queue-section" class="hidden">
-            <h2 id="queue-status">Đang quét tìm 12 người... (15s)</h2>
-        </div>
-        <div id="game-section" class="hidden">
-            <h2>⚔️ PHÒNG ĐẤU ĐÃ THIẾT LẬP</h2>
-            <div id="player-list"></div>
+
+        <!-- NỘI DUNG CHÍNH -->
+        <div class="content-body">
+            
+            <!-- 1. SẢNH CHỜ CHÍNH -->
+            <div id="lobby-pane" class="matchmaking-box">
+                <h2 style="margin-bottom: 5px; letter-spacing: 1px;">ĐẤU TRƯỜNG SINH TỬ 12 NGƯỜI</h2>
+                <p style="color: #94a3b8; margin-bottom: 25px; font-size: 14px;">Hệ thống tính điểm: Cứ mỗi 10 sao thăng 1 bậc (Đồng $\rightarrow$ Bạc $\rightarrow$ Vàng $\rightarrow$ Kim Cương $\rightarrow$ Tinh Anh)</p>
+                <button class="btn-play" onclick="startQueue()">ĐẤU HẠNG</button>
+                <div class="menu-row">
+                    <button class="btn-sub" onclick="openRoomModal()">Nhập ID Vào Phòng</button>
+                    <button class="btn-sub" onclick="openFriendModal()">Kết Bạn / Tìm Bạn</button>
+                </div>
+            </div>
+
+            <!-- 2. MÀN HÌNH ĐANG TÌM TRẬN -->
+            <div id="queue-pane" class="searching-screen hidden">
+                <div class="spinner"></div>
+                <h3 id="queue-timer-text">Đang tìm trận... (0s)</h3>
+                <p style="color: #64748b; font-size: 13px;">Đang ghép nối người chơi cùng phân khúc trên toàn hệ thống...</p>
+                <button onclick="cancelQueue()" style="background: #334155; color: #f8fafc; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; margin-top: 15px;">Hủy tìm</button>
+            </div>
+
+            <!-- 3. PHÒNG ĐẤU 12 NGƯỜI -->
+            <div id="room-pane" class="room-screen hidden">
+                <div class="room-header">
+                    <div class="room-title">⚔️ ĐÃ THIẾT LẬP BÀN ĐẤU SINH TỬ 12 NGƯỜI</div>
+                    <div class="room-id-tag" id="room-id-display">Mã Phòng: #MS9921</div>
+                </div>
+                <div id="player-list" class="player-grid"></div>
+            </div>
+
         </div>
     </div>
+
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let countdown = 15, timer;
-        function findMatch() {
-            document.getElementById('lobby-section').classList.add('hidden');
-            document.getElementById('queue-section').classList.remove('hidden');
-            socket.emit('find_match', { name: 'SurvivorX', rank: 'Kim Cương' });
-            timer = setInterval(() => {
-                countdown--;
-                document.getElementById('queue-status').innerText = `Đang tìm trận... (${countdown}s)`;
-                if (countdown <= 0) {
-                    clearInterval(timer);
-                    document.getElementById('queue-status').innerText = `Ghép trận tự động hoàn tất. Đang nạp Bot AI...`;
-                }
-            }, 1000);
+        let queueInterval, seconds = 0;
+        let currentStars = 24; // Ví dụ tổng số sao để tính bậc rank tự động (Cứ 10 sao lên 1 bậc)
+
+        function updateRankDisplay() {
+            const ranks = ["Đồng", "Bạc", "Vàng", "Kim Cương", "Tinh Anh", "Cao Thủ"];
+            let rankIndex = Math.floor(currentStars / 10);
+            let starInRank = currentStars % 10;
+            let currentRankName = ranks[Math.min(rankIndex, ranks.length - 1)];
+            document.getElementById('display-rank').innerText = `🏆 Rank ${currentRankName} (Sao: ${starInRank}/10)`;
         }
+        updateRankDisplay();
+
+        function startQueue() {
+            document.getElementById('lobby-pane').classList.add('hidden');
+            document.getElementById('queue-pane').classList.remove('hidden');
+            
+            seconds = 0;
+            document.getElementById('queue-timer-text').innerText = `Đang tìm trận... (0s)`;
+            queueInterval = setInterval(() => {
+                seconds++;
+                document.getElementById('queue-timer-text').innerText = `Đang tìm trận... (${seconds}s)`;
+            }, 1000);
+
+            socket.emit('find_match', { name: 'Người Chơi', stars: currentStars });
+        }
+
+        function cancelQueue() {
+            clearInterval(queueInterval);
+            document.getElementById('queue-pane').classList.add('hidden');
+            document.getElementById('lobby-pane').classList.remove('hidden');
+        }
+
+        function openRoomModal() {
+            let roomCode = prompt("Nhập ID phòng (Ví dụ: MS9921):");
+            if (roomCode) {
+                alert(`Đang kết nối vào phòng ID: ${roomCode}...`);
+            }
+        }
+
+        function openFriendModal() {
+            let friendID = prompt("Nhập ID người chơi cần tìm hoặc kết bạn:");
+            if (friendID) {
+                alert(`Đã gửi lời mời kết bạn hoặc tìm thấy hồ sơ ID: ${friendID}`);
+            }
+        }
+
+        // Nhận dữ liệu phòng đấu 12 người từ server
         socket.on('match_started', (data) => {
-            clearInterval(timer);
-            document.getElementById('queue-section').classList.add('hidden');
-            document.getElementById('game-section').classList.remove('hidden');
-            let listHTML = '<h3>Danh sách định danh ván đấu:</h3>';
+            clearInterval(queueInterval);
+            document.getElementById('queue-pane').classList.add('hidden');
+            document.getElementById('room-pane').classList.remove('hidden');
+            document.getElementById('room-id-display').innerText = `Mã Phòng: #${data.roomID}`;
+
+            let gridHTML = '';
             data.players.forEach(p => {
-                listHTML += `<div class="player-box"><b>${p.id}</b> — Giới tính: ${p.gender} | Nhân cách: ${p.personality}</div>`;
+                let genderColor = p.gender === 'Nam' ? '#60a5fa' : '#f472b6';
+                gridHTML += `
+                    <div class="player-card">
+                        <b style="color: #38bdf8;">${p.id}</b> — ${p.name}<br>
+                        Giới tính: <span style="color: ${genderColor}; font-weight: bold;">${p.gender}</span><br>
+                        <span style="font-size: 11px; color: #cbd5e1;">${p.personality}</span>
+                    </div>`;
             });
-            document.getElementById('player-list').innerHTML = listHTML;
+            document.getElementById('player-list').innerHTML = gridHTML;
         });
     </script>
 </body>
